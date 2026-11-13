@@ -16,62 +16,65 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   bool _obscureText = true;
-  final _userFocusNode = FocusNode();
+  final _mailFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
 
-  final _userController = TextEditingController();
+  final _mailController = TextEditingController();
   final _passController = TextEditingController();
 
   String? passError;
-  String? userError;
+  String? mailError;
 
   @override
   void initState() {
     super.initState();
-    _limpiarSesion();
-  }
-
-  Future<void> _limpiarSesion() async {
-    await Supabase.instance.client.auth.signOut();
-    await GoogleSignIn().signOut();
   }
 
   @override
   void dispose() {
-    _userController.dispose();
+    _mailController.dispose();
     _passController.dispose();
-    _userFocusNode.dispose();
+    _mailFocusNode.dispose();
     _passwordFocusNode.dispose();
     super.dispose();
   }
 
-  bool isValidUser(String user) {
-    final re = RegExp(r'^[A-Za-z]{4,}$');
-    return re.hasMatch(user);
+  bool isValidMail(String mail) {
+    final re = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+    return re.hasMatch(mail);
   }
 
-  bool isValidPassword(String pass) {
-    final re = RegExp(
-      r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$',
-    );
-    return re.hasMatch(pass);
-  }
-
-  void _onLogin() {
-    final user = _userController.text.trim();
+  Future<void> _onLogin() async {
+    final mail = _mailController.text.trim();
     final pass = _passController.text.trim();
+    final mError = isValidMail(mail) ? null : 'Correo Invalido';
+    final pError = pass.isNotEmpty ? null : 'Escribe tu contraseña';
 
-    final uError = isValidUser(user) ? null : 'Usuario Invalido';
-    final pError = isValidPassword(pass) ? null : 'Contraseña Invalida';
     setState(() {
-      userError = uError;
+      mailError = mError;
       passError = pError;
     });
-    if (uError == null && pError == null) {
+    if (mError != null || pError != null) return;
+
+    try {
+      await Supabase.instance.client.auth.signInWithPassword(
+        email: mail,
+        password: pass,
+      );
+
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const HomePage()),
+        MaterialPageRoute(builder: (_) => const HomePage()),
       );
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
@@ -139,12 +142,12 @@ class _LoginState extends State<Login> {
                 child: Image.asset('assets/images/logo.png'),
               ),
               TextField(
-                controller: _userController,
-                focusNode: _userFocusNode,
+                controller: _mailController,
+                focusNode: _mailFocusNode,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
-                  errorText: userError,
-                  labelText: 'Usuario',
+                  errorText: mailError,
+                  labelText: 'Correo Electronico',
                   labelStyle: const TextStyle(color: Colors.white),
                   prefixIcon: const Icon(Icons.person_outline_sharp),
                   enabledBorder: OutlineInputBorder(
