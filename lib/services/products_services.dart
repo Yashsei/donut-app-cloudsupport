@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -30,7 +31,7 @@ Future<void> signInWithGoogle() async {
       accessToken: accessToken,
     );
   } catch (e) {
-    print('Error al iniciar sesión con Google: $e');
+    Text('Error al iniciar sesión con Google: $e');
   }
 }
 
