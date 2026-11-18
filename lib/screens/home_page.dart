@@ -10,6 +10,7 @@ import 'package:donut_app/utils/cart_provider.dart';
 import 'package:donut_app/utils/my_tab.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -32,6 +33,11 @@ class _HomePageState extends State<HomePage> {
     //Smoothies Tab
     const MyTab(iconPath: 'assets/icons/smoothie.png', iconName: 'Smoothie'),
   ];
+  String get _displayName {
+    final user = Supabase.instance.client.auth.currentUser;
+    final meta = user?.userMetadata;
+    return (meta?['username'] ?? meta?['full_name'] ?? 'Invitado').toString();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +46,12 @@ class _HomePageState extends State<HomePage> {
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.transparent,
+          centerTitle: true,
+          title: Text(
+            'Hola, $_displayName',
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: Colors.black, fontSize: 22),
+          ),
           //Icono de la izquierda
           leading: IconButton(
             icon: Icon(Icons.favorite_border_rounded, color: Colors.pink[400]),
